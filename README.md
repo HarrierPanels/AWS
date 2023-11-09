@@ -18,4 +18,4 @@
 - Create a Mentor User in IAM so you he check it up
 - DNS name for load balancer, managed via Route53<sup>[x]</sup>
 - working HTTPS certificate managed via Certificate Manager<sup>[x]</sup>
-[MULTI-TIER](./crud-multi-tier.png)
+[![MULTI-TIER](./crud-multi-tier.png)]
