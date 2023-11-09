@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation template for Aurora DB Subnet Group
+
+Parameters:
+  DatabaseSubnet1Param:
+    Description: Private Subnet 1
+    Type: String
+    Default: 10.0.4.0/24
+    AllowedValues:
+      - 10.0.4.0/24
+
+  DatabaseSubnet2Param:
+    Description: Private Subnet 2
+    Type: String
+    Default: 10.0.5.0/24
+    AllowedValues:
+      - 10.0.5.0/24
+
+Resources:
+  DBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupName: cruddbsubnetgroup
+      DBSubnetGroupDescription: "2AZ group"
+      SubnetIds:
+        - !Ref DatabaseSubnet1
+        - !Ref DatabaseSubnet2
+      Tags:
+        - Key: Name
+          Value: AuroraDBSubnetGroup
+      DBSubnetGroupIngress:
+        - CIDRIP: 10.0.0.0/16 # Adjust this CIDR range as needed
+
+Outputs:
+  DBSubnetGroupID:
+    Description: "The ID of the created Aurora DB Subnet Group"
+    Value: !Ref DBSubnetGroup
