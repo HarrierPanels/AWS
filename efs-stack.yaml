@@ -22,7 +22,7 @@ Resources:
       SubnetId: subnet-06809f1194e68840c  # Use the appropriate SubnetId from the describe-mount-targets output
       SecurityGroups:   # Add appropriate security groups
         - sg-0123456789abcdef0  # Specify the security group ID
-      IpAddress: 10.0.3.42
+      IpAddress: automatic
 
   MountTargetSubnet2:
     Type: 'AWS::EFS::MountTarget'
@@ -31,7 +31,7 @@ Resources:
       SubnetId: subnet-04eb20b7d7ed0944d  # Use the appropriate SubnetId from the describe-mount-targets output
       SecurityGroups:   # Add appropriate security groups
         - sg-0123456789abcdef0  # Specify the security group ID
-      IpAddress: 10.0.2.175
+      IpAddress: automatic
 
 Outputs:
   EFSFileSystemID:
