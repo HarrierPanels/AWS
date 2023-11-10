@@ -2457,6 +2457,12 @@ Script completed: Thu Nov  9 18:25:33 UTC 2023
 * Closing connection
 curl: (28) Failed to connect to crudALB-1067167057.us-east-1.elb.amazonaws.com port 80 after 265899 ms: Couldn't connect to server
 
+[ec2-user@ip-10-0-0-218 ~]$ curl 2ip.ua
+ ip             : 44.195.37.94
+ hostname       : ec2-44-195-37-94.compute-1.amazonaws.com
+ provider       : Amazon.com Inc.
+ location       : United States Of America (US), Ashburn
+
 [ec2-user@ip-10-0-0-218 ~]$ curl crudALB-1067167057.us-east-1.elb.amazonaws.com
 
 <!DOCTYPE html>
