@@ -944,7 +944,7 @@ upload: ./crud-stack.yaml to s3://aws-task-1/crud-stack.yaml
 ```
 
 #### RDS. Create Multi-AZ DB subnet group & cluster
-[subnet-group.yaml](./subnet-group.yaml)
+[subnet-group.yaml](./subnet-group.yaml)<br>
 [db-cluster.yaml](./db-cluster.yaml)
 ```
 [ec2-user@ip-10-0-0-218 ~]$ aws rds describe-db-clusters --query 'DBClusters[*].DBClusterIdentifier'
@@ -1456,9 +1456,9 @@ upload: ./crud-stack.yaml to s3://aws-task-1/crud-stack.yaml
 
 > Here's why these components are crucial:<br>
 
-    > SSL Certificate: HTTPS uses SSL/TLS protocols to secure communication. The SSL certificate plays a vital role in this process, ensuring that the data exchanged between the client and server is encrypted and secure. Without a valid SSL certificate, the ALB won't be able to establish secure connections on port 443.<br>
+> SSL Certificate: HTTPS uses SSL/TLS protocols to secure communication. The SSL certificate plays a vital role in this process, ensuring that the data exchanged between the client and server is encrypted and secure. Without a valid SSL certificate, the ALB won't be able to establish secure connections on port 443.<br>
 
-    > Registered Domain: A registered domain is required to associate the SSL certificate with a specific domain name. This association is crucial for the SSL handshake process, which is fundamental to secure communication. The SSL handshake involves the client verifying the authenticity of the server, and having a registered domain ensures that the client trusts the server.<br>
+> Registered Domain: A registered domain is required to associate the SSL certificate with a specific domain name. This association is crucial for the SSL handshake process, which is fundamental to secure communication. The SSL handshake involves the client verifying the authenticity of the server, and having a registered domain ensures that the client trusts the server.<br>
 
 > Unfortunately, these prerequisites go beyond the AWS Free Tier options or Cloud Guru License, as they involve external services such as domain registration and SSL certificate acquisition.<br>
 ```
@@ -1618,7 +1618,7 @@ Outputs:
 ```
 
 #### Auto Scaling Group
-[crud-stack.yaml](./crud-stack.yaml)
+[crud-stack.yaml](./crud-stack.yaml)<br>
 [crud-asg.yaml](./crud-asg.yaml)
 ```
 [ec2-user@ip-10-0-0-218 ~]$ aws autoscaling describe-auto-scaling-groups
@@ -2528,73 +2528,3 @@ curl: (28) Failed to connect to crudALB-1067167057.us-east-1.elb.amazonaws.com p
 AWS Task
 Complete!
 ```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>PHP CRUD MYSQL</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <!-- BOOTSTRAP 4 -->
-    <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css">
-    <!-- FONT AWESOEM -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-  </head>
-  <body>
-
-    <nav class="navbar navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="index.php">PHP MySQL CRUD ID/IP: i-06c3804f6f537d9aa | 10.0.2.11</a>
-      </div>
-    </nav>
-
-<main class="container p-4">
-  <div class="row">
-    <div class="col-md-4">
-      <!-- MESSAGES -->
-
-
-      <!-- ADD TASK FORM -->
-      <div class="card card-body">
-        <form action="save_task.php" method="POST">
-          <div class="form-group">
-            <input type="text" name="title" class="form-control" placeholder="Task Title" autofocus>
-          </div>
-          <div class="form-group">
-            <textarea name="description" rows="2" class="form-control" placeholder="Task Description"></textarea>
-          </div>
-          <input type="submit" name="save_task" class="btn btn-success btn-block" value="Save Task">
-        </form>
-      </div>
-    </div>
-    <div class="col-md-8">
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Created At</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-
-                    <tr>
-            <td>AWS Task</td>
-            <td>Complete!</td>
-            <td>2023-11-09 18:25:12</td>
-            <td>
-              <a href="edit.php?id=1" class="btn btn-secondary">
-                <i class="fas fa-marker"></i>
-              </a>
-              <a href="delete_task.php?id=1" class="btn btn-danger">
-                <i class="far fa-trash-alt"></i>
-              </a>
-            </td>
-          </tr>
-                  </tbody>
-      </table>
-    </div>
-  </div>
-</main>
-</body>
-</html>
