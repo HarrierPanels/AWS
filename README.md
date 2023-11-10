@@ -1,7 +1,7 @@
 [![EPAM](https://img.shields.io/badge/Cloud&DevOps%20UA%20Lab%202nd%20Path-Cloud:%20AWS%20Task-orange)](./)
 [![HitCount](https://hits.dwyl.com/HarrierPanels/my-java-project.svg?style=flat&show=unique)](http://hits.dwyl.com/HarrierPanels/AWS)
 <br>
-## Deploy https://github.com/FaztWeb/php-mysql-crud using CloudFormation as follows:
+## Deploy https://github.com/FaztWeb/php-mysql-crud using CloudFormation for an AWS multi-tier architecture as follows:
 
 - Create a VPC.
 - Create an Application Load Balancer.
