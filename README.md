@@ -2536,7 +2536,7 @@ curl: (28) Failed to connect to crudALB-1067167057.us-east-1.elb.amazonaws.com p
 </html>
 
 ```
-#### Create an IAM user named "mentor" with the password "sample1234554321" and read-only access to EC2, S3, EFS, CloudFormation, and RDS
+#### Create an IAM user named "mentor" with the password 'I4Yu45}[=l[Gm0JdPxKj' and read-only access to EC2, S3, EFS, CloudFormation, and RDS
 ```
 [ec2-user@ip-10-0-0-218 ~]$ aws iam create-user --user-name mentor && \
 > aws iam create-login-profile --user-name mentor --password 'I4Yu45}[=l[Gm0JdPxKj' && \
