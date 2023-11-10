@@ -29,6 +29,17 @@
 upload: ./vpc-stack.yaml to s3://aws-task-1/vpc-stack.yaml
 [ec2-user@ip-10-0-0-218 ~]$ aws s3 cp crud-stack.yaml s3://aws-task-1/
 upload: ./crud-stack.yaml to s3://aws-task-1/crud-stack.yaml
+[ec2-user@ip-10-0-0-218 ~]$ aws s3 cp crud-alb.yaml s3://aws-task-1/
+upload: ./crud-alb.yaml to s3://aws-task-1/crud-alb.yaml
+[ec2-user@ip-10-0-0-218 ~]$ aws s3 cp crud-asg.yaml s3://aws-task-1/
+upload: ./crud-asg.yaml to s3://aws-task-1/crud-asg.yaml
+[ec2-user@ip-10-0-0-218 ~]$ aws s3 cp db-cluster.yaml s3://aws-task-1/
+upload: ./db-cluster.yaml to s3://aws-task-1/db-cluster.yaml
+[ec2-user@ip-10-0-0-218 ~]$ aws s3 cp efs-stack.yaml s3://aws-task-1/
+upload: ./efs-stack.yaml to s3://aws-task-1/efs-stack.yaml
+[ec2-user@ip-10-0-0-218 ~]$ aws s3 cp subnet-group.yaml s3://aws-task-1/
+upload: ./subnet-group.yaml to s3://aws-task-1/subnet-group.yaml
+
 [ec2-user@ip-10-0-0-218 ~]$ aws s3api get-bucket-policy --bucket aws-task-1 --query Policy | jq -r 'fromjson | {Version: .Version, Statement: .Statement}'
 {
   "Version": "2012-10-17",
