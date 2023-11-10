@@ -19,7 +19,7 @@
 - DNS name for load balancer, managed via Route53<sup>[x]</sup>
 - working HTTPS certificate managed via Certificate Manager<sup>[x]</sup>
 [![MULTI-TIER](./crud-multi-tier.png)](./crud-multi-tier.png)
-#### Create private S3 with necessary yaml files
+#### Create a private S3 bucket with necessary yaml files
 ```
 [ec2-user@ip-10-0-0-218 ~]$ aws s3api create-bucket --bucket aws-task-1 --acl private
 {
