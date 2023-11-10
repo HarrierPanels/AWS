@@ -1296,7 +1296,7 @@ upload: ./subnet-group.yaml to s3://aws-task-1/subnet-group.yaml
 ```
 
 #### EFS.
-> <sup>Amazon EFS provides a scalable, shared, and consistent file system that simplifies the management of shared storage for applications running on multiple instances. It's particularly useful for scenarios where instances need to access and modify shared data in a scalable and dynamic environment, such as a CRUD application in a cloud-based infrastructure.</sup>
+> <sup>Amazon EFS provides a scalable, shared, and consistent file system that simplifies the management of shared storage for applications running on multiple instances. It's particularly useful for scenarios where instances need to access and modify shared data in a scalable and dynamic environment, such as a CRUD application in a cloud-based infrastructure.</sup><br>
 [efs-stack.yaml](./efs-stack.yaml)
 ```
 [ec2-user@ip-10-0-0-218 ~]$ aws efs describe-file-systems
