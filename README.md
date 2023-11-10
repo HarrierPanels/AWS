@@ -15,7 +15,7 @@
 - The project code must be on S3
 - S3 bucket is not public
 - Database in RDS. RDS has its own security group with access only to machines with Auto Scaling Group.
-- Create a Mentor User in IAM so you he check it up
+- Create a Mentor User in IAM so he can check it up
 - DNS name for load balancer, managed via Route53<sup>[x]</sup>
 - working HTTPS certificate managed via Certificate Manager<sup>[x]</sup>
 [![MULTI-TIER](./crud-multi-tier.png)](./crud-multi-tier.png)
