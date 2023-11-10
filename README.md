@@ -2524,7 +2524,35 @@ curl: (28) Failed to connect to crudALB-1067167057.us-east-1.elb.amazonaws.com p
 </body>
 </html>
 
-[root@ip-10-0-0-218 ~]# curl -s crudALB-1067167057.us-east-1.elb.amazonaws.com | grep -o 'AWS Task' && curl -s crudALB-1067167057.us-east-1.elb.amazonaws.com | grep -o 'Complete!'
+```
+#### Create an IAM user named "mentor" with the password "sample1234554321" and read-only access to EC2, S3, EFS, CloudFormation, and RDS
+```
+[ec2-user@ip-10-0-0-218 ~]$ aws iam create-user --user-name mentor && \
+> aws iam create-login-profile --user-name mentor --password 'I4Yu45}[=l[Gm0JdPxKj' && \
+> aws iam attach-user-policy --user-name mentor --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess && \
+> aws iam attach-user-policy --user-name mentor --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess && \
+> aws iam attach-user-policy --user-name mentor --policy-arn arn:aws:iam::aws:policy/AmazonElasticFileSystemReadOnlyAccess && \
+> aws iam attach-user-policy --user-name mentor --policy-arn arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess && \
+> aws iam attach-user-policy --user-name mentor --policy-arn arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
+{
+    "User": {
+        "Path": "/",
+        "UserName": "mentor",
+        "UserId": "AIDAQLRK2ZN6W3JUC7H32",
+        "Arn": "arn:aws:iam::361478966802:user/mentor",
+        "CreateDate": "2023-11-10T10:24:13+00:00"
+    }
+}
+{
+    "LoginProfile": {
+        "UserName": "mentor",
+        "CreateDate": "2023-11-10T10:24:14+00:00",
+        "PasswordResetRequired": false
+    }
+}
+```
+```
+[ec2-user@ip-10-0-0-218 ~]# curl -s crudALB-1067167057.us-east-1.elb.amazonaws.com | grep -o 'AWS Task' && curl -s crudALB-1067167057.us-east-1.elb.amazonaws.com | grep -o 'Complete!'
 AWS Task
 Complete!
 ```
