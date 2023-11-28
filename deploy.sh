@@ -2,6 +2,6 @@
 
 [ $(id -u) -ne 0  ] && CMD="sudo" || CMD=""
 
-curl -s http://assets.playpit.net/install-docker.sh  | ${CMD} bash
-curl -s http://assets.playpit.net/install-nginx.sh   | ${CMD} bash
-curl -s http://assets.playpit.net/install-playpit.sh | ${CMD} bash
+curl -s https://github.com/HarrierPanels/AWS/blob/main/install-docker.sh | ${CMD} bash
+curl -s https://github.com/HarrierPanels/AWS/blob/main/install-nginx.sh | ${CMD} bash
+curl -s https://github.com/HarrierPanels/AWS/blob/main/install-playpit.shh | ${CMD} bash
