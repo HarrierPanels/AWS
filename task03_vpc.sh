@@ -10,6 +10,18 @@ aws_profile_config() {
     aws configure --profile $1 set aws_secret_access_key $3
 }
 
+# Function to check if three arguments are provided
+check_arguments() {
+    if [ "$#" -ne 3 ]; then
+        echo "Error: You must provide exactly three EC2 instance IDs as arguments."
+        echo "Usage: $0 <EC2_INSTANCE_A> <EC2_INSTANCE_B> <EC2_INSTANCE_C>"
+        exit 1
+    fi
+}
+
+# Check if three arguments are provided
+check_arguments "$@"
+
 # Configure AWS profile
 echo "Configuring AWS Profile $aws_profile ..."
 aws_profile_config $aws_profile $aws_access_key_id $aws_secret_access_key
@@ -77,7 +89,6 @@ create_vpc_peering() {
     local accepter_vpc=$2
     local requester_region=$3
     local accepter_region=$4
-    echo "Creating VPC peering between $requester_vpc in $requester_region and $accepter_vpc in $accepter_region..."
     local peering_id=$(aws ec2 create-vpc-peering-connection \
         --vpc-id $requester_vpc \
         --peer-vpc-id $accepter_vpc \
@@ -86,8 +97,6 @@ create_vpc_peering() {
         --profile $aws_profile \
         --query 'VpcPeeringConnection.VpcPeeringConnectionId' \
         --output text)
-
-    echo "VPC Peering Connection ID: $peering_id"
     echo "$peering_id"
 }
 
@@ -97,7 +106,6 @@ update_route_table() {
     local destination_cidr=$2
     local peering_connection_id=$3
     local region=$4
-    echo "Updating route table $route_table for VPC peering in $region..."
     aws ec2 create-route \
         --route-table-id $route_table \
         --destination-cidr-block $destination_cidr \
@@ -109,14 +117,11 @@ update_route_table() {
 # Function to create a transit gateway
 create_transit_gateway() {
     local region=$1
-    echo "Creating Transit Gateway in $region..."
     local tgw_id=$(aws ec2 create-transit-gateway \
         --region $region \
         --profile $aws_profile \
         --query 'TransitGateway.TransitGatewayId' \
         --output text)
-
-    echo "Transit Gateway ID: $tgw_id"
     echo "$tgw_id"
 }
 
@@ -125,7 +130,6 @@ create_tgw_vpc_attachment() {
     local tgw_id=$1
     local vpc_id=$2
     local region=$3
-    echo "Creating Transit Gateway VPC Attachment for VPC $vpc_id in $region..."
     aws ec2 create-transit-gateway-vpc-attachment \
         --transit-gateway-id $tgw_id \
         --vpc-id $vpc_id \
@@ -151,6 +155,7 @@ perform_healthcheck() {
 # Main execution
 
 # Get actual VPC IDs
+echo "Getting VPC IDs..."
 vpc_a=$(get_vpc_id_by_tag $vpc_tag_a $region_a)
 echo "VPC A ID: $vpc_a"
 vpc_b=$(get_vpc_id_by_tag $vpc_tag_b $region_b)
@@ -159,6 +164,7 @@ vpc_c=$(get_vpc_id_by_tag $vpc_tag_c $region_c)
 echo "VPC C ID: $vpc_c"
 
 # Get actual Route Table IDs
+echo "Getting Route Table IDs..."
 route_table_a=$(get_route_table_id_by_tag $route_table_tag_a $region_a)
 echo "Route Table A ID: $route_table_a"
 route_table_b=$(get_route_table_id_by_tag $route_table_tag_b $region_b)
@@ -167,23 +173,33 @@ route_table_c=$(get_route_table_id_by_tag $route_table_tag_c $region_c)
 echo "Route Table C ID: $route_table_c"
 
 # Create VPC peering between VPC A and VPC B
+echo "Creating VPC peering between VPC A and VPC B..."
 peering_connection_ab=$(create_vpc_peering $vpc_a $vpc_b $region_a $region_b)
+echo "VPC Peering Connection ID: $peering_connection_ab"
 
 # Update route tables for VPC peering
+echo "Updating route tables for VPC peering..."
 update_route_table $route_table_a $cidr_b $peering_connection_ab $region_a
 update_route_table $route_table_b $cidr_a $peering_connection_ab $region_b
 
 # Create Transit Gateway in Region A
+echo "Creating Transit Gateway in Region A..."
 tgw_a=$(create_transit_gateway $region_a)
+echo "Transit Gateway A ID: $tgw_a"
 
 # Create Transit Gateway Attachments for VPC A and VPC C
+echo "Creating Transit Gateway VPC Attachments..."
 create_tgw_vpc_attachment $tgw_a $vpc_a $region_a
 create_tgw_vpc_attachment $tgw_a $vpc_c $region_c
 
 # Get private IP addresses of EC2 instances
+echo "Getting private IP addresses of EC2 instances..."
 private_ip_a=$(get_instance_private_ip $ec2_instance_a $region_a)
+echo "Private IP of EC2 Instance A: $private_ip_a"
 private_ip_b=$(get_instance_private_ip $ec2_instance_b $region_b)
+echo "Private IP of EC2 Instance B: $private_ip_b"
 private_ip_c=$(get_instance_private_ip $ec2_instance_c $region_c)
+echo "Private IP of EC2 Instance C: $private_ip_c"
 
 # Perform health checks with actual target IPs
 perform_healthcheck $ec2_instance_a $private_ip_b $region_a  # Ping from instance A to instance B
