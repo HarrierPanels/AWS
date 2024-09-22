@@ -143,6 +143,34 @@ check_transit_gateway_exists() {
     echo "$tgw_id"
 }
 
+# Function to check if a transit gateway is available
+check_tgw_available() {
+    local tgw_id=$1
+    local region=$2
+    local max_retries=10
+    local retries=0
+    local state=""
+
+    while [ $retries -lt $max_retries ]; do
+        state=$(aws ec2 describe-transit-gateways \
+            --transit-gateway-ids $tgw_id \
+            --region $region \
+            --profile $aws_profile \
+            --query 'TransitGateways[0].State' \
+            --output text)
+        if [ "$state" == "available" ]; then
+            echo "Transit Gateway $tgw_id is available."
+            return 0
+        fi
+        echo "Waiting for Transit Gateway $tgw_id to become available..."
+        sleep 30
+        retries=$((retries + 1))
+    done
+
+    echo "Transit Gateway $tgw_id did not become available after $max_retries retries."
+    return 1
+}
+
 # Function to create a transit gateway VPC attachment
 create_tgw_vpc_attachment() {
     local tgw_id=$1
@@ -165,6 +193,7 @@ create_tgw_peering_attachment() {
     aws ec2 create-transit-gateway-peering-attachment \
         --transit-gateway-id $tgw_id \
         --peer-transit-gateway-id $peer_tgw_id \
+        --peer-account-id $(aws sts get-caller-identity --query 'Account' --output text --profile $aws_profile) \
         --region $region \
         --peer-region $peer_region \
         --profile $aws_profile
@@ -263,6 +292,12 @@ main() {
     else
         echo "Transit Gateway already exists in Region C: $tgw_c"
     fi
+
+    # Wait for Transit Gateways to become available
+    echo "Waiting for Transit Gateways to become available..."
+    check_tgw_available $tgw_a $region_a
+    check_tgw_available $tgw_b $region_b
+    check_tgw_available $tgw_c $region_c
 
     # Create Transit Gateway VPC attachments
     echo "Creating Transit Gateway VPC Attachments..."
