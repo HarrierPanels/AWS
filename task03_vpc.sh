@@ -219,7 +219,7 @@ check_tgw_peering_available() {
 
     while [ $retries -lt $max_retries ]; do
         state=$(aws ec2 describe-transit-gateway-peering-attachments \
-            --transit-gateway-peering-attachment-ids $tgw_peering_id \
+            --transit-gateway-attachment-ids $tgw_peering_id \
             --region $region \
             --profile $aws_profile \
             --query 'TransitGatewayPeeringAttachments[0].State' \
