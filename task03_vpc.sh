@@ -104,7 +104,9 @@ create_vpc_peering() {
 accept_vpc_peering() {
     local peering_id=$1
     local region=$2
-    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $peering_id --region $region --profile $aws_profile
+    aws ec2 accept-vpc-peering-connection \
+        --vpc-peering-connection-id $peering_id \
+        --region $region --profile $aws_profile
 }
 
 # Function to update route table for VPC peering
@@ -179,7 +181,11 @@ create_tgw_vpc_attachment() {
     aws ec2 create-transit-gateway-vpc-attachment \
         --transit-gateway-id $tgw_id \
         --vpc-id $vpc_id \
-        --subnet-ids $(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --region $region --profile $aws_profile --query 'Subnets[*].SubnetId' --output text) \
+        --subnet-ids $(aws ec2 describe-subnets \
+            --filters "Name=vpc-id,Values=$vpc_id" \
+            --region $region --profile $aws_profile \
+            --query 'Subnets[*].SubnetId' \
+            --output text) \
         --region $region \
         --profile $aws_profile
 }
@@ -190,13 +196,17 @@ create_tgw_peering_attachment() {
     local peer_tgw_id=$2
     local region=$3
     local peer_region=$4
-    aws ec2 create-transit-gateway-peering-attachment \
+
+    local result=$(aws ec2 create-transit-gateway-peering-attachment \
         --transit-gateway-id $tgw_id \
         --peer-transit-gateway-id $peer_tgw_id \
         --peer-account-id $(aws sts get-caller-identity --query 'Account' --output text --profile $aws_profile) \
         --region $region \
         --peer-region $peer_region \
-        --profile $aws_profile
+        --profile $aws_profile)
+
+    local tgw_peering_id=$(echo $result | jq -r '.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId')
+    echo $tgw_peering_id
 }
 
 # Function to accept transit gateway peering attachment
@@ -217,6 +227,8 @@ check_tgw_peering_available() {
     local retries=0
     local state=""
 
+    echo "Checking Transit Gateway Peering Attachment: $tgw_peering_id in region: $region"
+
     while [ $retries -lt $max_retries ]; do
         state=$(aws ec2 describe-transit-gateway-peering-attachments \
             --transit-gateway-attachment-ids $tgw_peering_id \
@@ -229,7 +241,7 @@ check_tgw_peering_available() {
             return 0
         fi
         echo "Waiting for Transit Gateway Peering Attachment $tgw_peering_id to become available..."
-        sleep 30
+        sleep 5
         retries=$((retries + 1))
     done
 
@@ -360,6 +372,8 @@ main() {
     echo "Waiting for Transit Gateway peering attachments to become available..."
     check_tgw_peering_available $tgw_peering_ac $region_c
     check_tgw_peering_available $tgw_peering_bc $region_c
+
+sleep 120 # delete
 
     # Update Transit Gateway route tables
     echo "Updating Transit Gateway route tables..."
