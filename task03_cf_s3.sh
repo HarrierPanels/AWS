@@ -2,112 +2,121 @@
 
 # Variables
 aws_profile=$1
-aws_access_key_id=$2
-aws_secret_access_key=$3
+access_key=$2
+secret_key=$3
 region=$4
-s3_bucket="cmtr-79e2b04a-cloudfront-sswo-bucket-179026"
-cloudfront_dist_name="cmtr-79e2b04a-cloudfront-sswo-distribution"
+bucket_name="cmtr-79e2b04a-cloudfront-sswo-bucket-179026"
 oai_name="cmtr-79e2b04a-cloudfront-sswo-oai"
-index_file="index.html"
-error_file="error.html"
+cloudfront_desc="cmtr-79e2b04a-cloudfront-sswo-distribution"
 nonexistent_page="database.html"
 
 # Function to configure AWS profile
 aws_profile_config() {
-    aws configure set aws_access_key_id $2 --profile $1
-    aws configure set aws_secret_access_key $3 --profile $1
-    aws configure set region $4 --profile $1
+    aws configure set aws_access_key_id $access_key --profile $aws_profile
+    aws configure set aws_secret_access_key $secret_key --profile $aws_profile
+    aws configure set region $region --profile $aws_profile
 }
 
-# Function to get CloudFront OAI ID
+# Step 1: Retrieve OAI ID for the given OAI name
 get_oai_id() {
-    aws cloudfront list-cloud-front-origin-access-identities --profile $aws_profile \
-    --query "CloudFrontOriginAccessIdentityList.Items[?Comment=='$oai_name'].Id" --output text
-}
-
-# Function to update CloudFront with OAI
-update_cloudfront_with_oai() {
-    oai_id=$(get_oai_id)
+    oai_id=$(aws cloudfront list-cloud-front-origin-access-identities --query "CloudFrontOriginAccessIdentityList.Items[?Comment=='$oai_name'].Id" --output text --profile $aws_profile)
     if [ -z "$oai_id" ]; then
-        echo "Error: OAI not found!"
+        echo "Error: Unable to retrieve OAI ID for $oai_name"
         exit 1
     fi
+    echo "Retrieved OAI ID: $oai_id"
+}
 
-    # Get CloudFront distribution config
-    distribution_id=$(aws cloudfront list-distributions --profile $aws_profile \
-    --query "DistributionList.Items[?Aliases.Items[?contains(@, '$cloudfront_dist_name')]].Id" --output text)
-    
+# Step 2: Retrieve CloudFront distribution ID based on the description
+get_distribution_id() {
+    distribution_id=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$cloudfront_desc'].Id" --output text --profile $aws_profile)
     if [ -z "$distribution_id" ]; then
-        echo "Error: CloudFront distribution not found!"
+        echo "Error: Unable to retrieve CloudFront distribution ID for $cloudfront_desc"
         exit 1
     fi
-
-    # Get the current distribution config ETag
-    etag=$(aws cloudfront get-distribution-config --id $distribution_id --profile $aws_profile --query 'ETag' --output text)
-
-    # Update the distribution with OAI
-    aws cloudfront update-distribution --id $distribution_id --profile $aws_profile \
-    --distribution-config "$(aws cloudfront get-distribution-config --id $distribution_id --profile $aws_profile | \
-    jq ".DistributionConfig.Origins.Items[0].S3OriginConfig.OriginAccessIdentity=\"origin-access-identity/cloudfront/$oai_id\"")" \
-    --if-match $etag
+    echo "Retrieved CloudFront Distribution ID: $distribution_id"
 }
 
-# Function to configure custom error response in CloudFront
-configure_custom_error_response() {
-    distribution_id=$(aws cloudfront list-distributions --profile $aws_profile \
-    --query "DistributionList.Items[?Aliases.Items[?contains(@, '$cloudfront_dist_name')]].Id" --output text)
-    
-    etag=$(aws cloudfront get-distribution-config --id $distribution_id --profile $aws_profile --query 'ETag' --output text)
-
-    aws cloudfront update-distribution --id $distribution_id --profile $aws_profile \
-    --distribution-config "$(aws cloudfront get-distribution-config --id $distribution_id --profile $aws_profile | \
-    jq '.DistributionConfig.CustomErrorResponses.Items += [{"ErrorCode": 403, "ResponsePagePath": "/error.html", "ResponseCode": "404", "ErrorCachingMinTTL": 300}]')" \
-    --if-match $etag
+# Step 3: Attach OAI to CloudFront distribution
+attach_oai_to_distribution() {
+    aws cloudfront update-distribution \
+        --id $distribution_id \
+        --default-root-object index.html \
+        --origins Items=[{Id=S3Origin,DomainName=$bucket_name.s3.amazonaws.com,S3OriginConfig={OriginAccessIdentity=origin-access-identity/cloudfront/$oai_id}}] \
+        --profile $aws_profile
+    echo "OAI attached to CloudFront distribution."
 }
 
-# Function to restrict S3 bucket access and grant OAI permissions
-restrict_s3_bucket_access() {
-    oai_id=$(get_oai_id)
-    if [ -z "$oai_id" ]; then
-        echo "Error: OAI not found!"
-        exit 1
-    fi
+# Step 4: Update CloudFront error page response
+update_cloudfront_error_page() {
+    aws cloudfront update-distribution \
+        --id $distribution_id \
+        --default-root-object index.html \
+        --custom-error-responses Quantity=1,Items=[{ErrorCode=403,ResponsePagePath=/error.html,ResponseCode=404,ErrorCachingMinTTL=300}] \
+        --profile $aws_profile
+    echo "Updated CloudFront custom error response."
+}
 
-    # Block public access to the S3 bucket
-    aws s3api put-bucket-policy --bucket $s3_bucket --profile $aws_profile \
-    --policy "{
-        \"Version\": \"2012-10-17\",
-        \"Statement\": [
+# Step 5: Restrict public access to the S3 bucket
+restrict_bucket_access() {
+    aws s3api put-bucket-policy --bucket $bucket_name --policy '{
+        "Version": "2012-10-17",
+        "Statement": [
             {
-                \"Sid\": \"AllowCloudFrontAccess\",
-                \"Effect\": \"Allow\",
-                \"Principal\": {
-                    \"AWS\": \"arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $oai_id\"
-                },
-                \"Action\": \"s3:GetObject\",
-                \"Resource\": \"arn:aws:s3:::$s3_bucket/*\"
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::'$bucket_name'/*",
+                "Condition": {
+                    "Bool": {
+                        "aws:Referer": false
+                    }
+                }
             }
         ]
-    }"
+    }' --profile $aws_profile
+    echo "Public access to the S3 bucket is now restricted."
 }
 
-# Function to perform health checks
-perform_health_checks() {
-    s3_website_url=$(aws s3api get-bucket-website --bucket $s3_bucket --profile $aws_profile --query "[WebsiteConfiguration.IndexDocument.Suffix]" --output text)
-    cloudfront_domain=$(aws cloudfront list-distributions --profile $aws_profile \
-    --query "DistributionList.Items[?Aliases.Items[?contains(@, '$cloudfront_dist_name')]].DomainName" --output text)
-    
-    echo "Checking S3 access..."
+# Step 6: Grant OAI read permissions on the S3 bucket
+grant_oai_s3_permissions() {
+    aws s3api put-bucket-policy --bucket $bucket_name --policy '{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '$oai_id'"
+                },
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::'$bucket_name'/*"
+            }
+        ]
+    }' --profile $aws_profile
+    echo "OAI granted permissions to read from the S3 bucket."
+}
+
+# Step 7: Health check - ensure S3 URLs return AccessDenied
+check_s3_access() {
+    s3_website_url=$(aws s3api get-bucket-website --bucket $bucket_name --query "[WebsiteConfiguration.IndexDocument.Suffix]" --output text --profile $aws_profile)
+    echo "Performing health check on S3 bucket..."
     curl -I $s3_website_url
-    echo "Checking CloudFront access..."
-    curl -I https://$cloudfront_domain/$index_file
-    echo "Checking CloudFront error response..."
-    curl -I https://$cloudfront_domain/$nonexistent_page
 }
 
-# Execute the functions
-aws_profile_config $aws_profile $aws_access_key_id $aws_secret_access_key $region
-update_cloudfront_with_oai
-configure_custom_error_response
-restrict_s3_bucket_access
-perform_health_checks
+# Step 8: Health check - ensure CloudFront delivers content via OAI
+check_cloudfront_access() {
+    cloudfront_domain=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$cloudfront_desc'].DomainName" --output text --profile $aws_profile)
+    echo "Performing health check on CloudFront..."
+    curl -I "https://$cloudfront_domain/$nonexistent_page"
+}
+
+# Main Execution
+aws_profile_config
+get_oai_id
+get_distribution_id
+attach_oai_to_distribution
+update_cloudfront_error_page
+restrict_bucket_access
+grant_oai_s3_permissions
+check_s3_access
+check_cloudfront_access
