@@ -97,7 +97,6 @@ create_vpc_peering() {
         --profile $aws_profile \
         --query 'VpcPeeringConnection.VpcPeeringConnectionId' \
         --output text)
-    echo "$peering_id"
 }
 
 # Function to accept VPC peering connection
@@ -129,7 +128,6 @@ create_transit_gateway() {
         --profile $aws_profile \
         --query 'TransitGateway.TransitGatewayId' \
         --output text)
-    echo "$tgw_id"
 }
 
 # Function to create a transit gateway VPC attachment
