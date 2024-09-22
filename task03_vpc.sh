@@ -100,6 +100,14 @@ create_vpc_peering() {
     echo "$peering_id"
 }
 
+# Accept VPC peering connection
+accept_vpc_peering() {
+    local peering_id=$1
+    local region=$2
+    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id \
+        $peering_id --region $region --profile $aws_profile
+}
+
 # Function to update route table for VPC peering
 update_route_table() {
     local route_table=$1
@@ -176,6 +184,10 @@ echo "Route Table C ID: $route_table_c"
 echo "Creating VPC peering between VPC A and VPC B..."
 peering_connection_ab=$(create_vpc_peering $vpc_a $vpc_b $region_a $region_b)
 echo "VPC Peering Connection ID: $peering_connection_ab"
+
+# Accept VPC peering connection
+echo "Accepting VPC peering connection..."
+#accept_vpc_peering $peering_connection_ab $region_b
 
 # Update route tables for VPC peering
 echo "Updating route tables for VPC peering..."
