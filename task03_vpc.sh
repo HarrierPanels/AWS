@@ -103,7 +103,8 @@ create_vpc_peering() {
 accept_vpc_peering() {
     local peering_id=$1
     local region=$2
-    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $peering_id --region $region --profile $aws_profile
+    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id \
+        $peering_id --region $region --profile $aws_profile
 }
 
 # Function to update route table for VPC peering
@@ -127,6 +128,16 @@ create_transit_gateway() {
         --region $region \
         --profile $aws_profile \
         --query 'TransitGateway.TransitGatewayId' \
+        --output text)
+}
+
+# Function to check if a transit gateway exists in a region
+check_transit_gateway_exists() {
+    local region=$1
+    local tgw_id=$(aws ec2 describe-transit-gateways \
+        --region $region \
+        --profile $aws_profile \
+        --query 'TransitGateways[0].TransitGatewayId' \
         --output text)
 }
 
@@ -225,16 +236,31 @@ main() {
     update_route_table $route_table_id_a $cidr_b $peering_connection_ab $region_a
     update_route_table $route_table_id_b $cidr_a $peering_connection_ab $region_b
 
-    # Create Transit Gateways
-    echo "Creating Transit Gateway in Region A..."
-    tgw_a=$(create_transit_gateway $region_a)
-    echo "Transit Gateway A ID: $tgw_a"
-    echo "Creating Transit Gateway in Region B..."
-    tgw_b=$(create_transit_gateway $region_b)
-    echo "Transit Gateway B ID: $tgw_b"
-    echo "Creating Transit Gateway in Region C..."
-    tgw_c=$(create_transit_gateway $region_c)
-    echo "Transit Gateway C ID: $tgw_c"
+    # Check if Transit Gateways exist and create if necessary
+    echo "Checking for existing Transit Gateways..."
+    tgw_a=$(check_transit_gateway_exists $region_a)
+    if [ "$tgw_a" == "None" ]; then
+        echo "Creating Transit Gateway in Region A..."
+        tgw_a=$(create_transit_gateway $region_a)
+    else
+        echo "Transit Gateway already exists in Region A: $tgw_a"
+    fi
+
+    tgw_b=$(check_transit_gateway_exists $region_b)
+    if [ "$tgw_b" == "None" ]; then
+        echo "Creating Transit Gateway in Region B..."
+        tgw_b=$(create_transit_gateway $region_b)
+    else
+        echo "Transit Gateway already exists in Region B: $tgw_b"
+    fi
+
+    tgw_c=$(check_transit_gateway_exists $region_c)
+    if [ "$tgw_c" == "None" ]; then
+        echo "Creating Transit Gateway in Region C..."
+        tgw_c=$(create_transit_gateway $region_c)
+    else
+        echo "Transit Gateway already exists in Region C: $tgw_c"
+    fi
 
     # Create Transit Gateway VPC attachments
     echo "Creating Transit Gateway VPC Attachments..."
