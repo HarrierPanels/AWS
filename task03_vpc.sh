@@ -373,8 +373,6 @@ main() {
     check_tgw_peering_available $tgw_peering_ac $region_c
     check_tgw_peering_available $tgw_peering_bc $region_c
 
-sleep 120 # delete
-
     # Update Transit Gateway route tables
     echo "Updating Transit Gateway route tables..."
     update_tgw_route_table $tgw_a $cidr_c $tgw_peering_ac $region_a
