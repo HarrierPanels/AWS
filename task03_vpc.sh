@@ -97,14 +97,14 @@ create_vpc_peering() {
         --profile $aws_profile \
         --query 'VpcPeeringConnection.VpcPeeringConnectionId' \
         --output text)
+    echo "$peering_id"
 }
 
 # Function to accept VPC peering connection
 accept_vpc_peering() {
     local peering_id=$1
     local region=$2
-    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id \
-        $peering_id --region $region --profile $aws_profile
+    aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $peering_id --region $region --profile $aws_profile
 }
 
 # Function to update route table for VPC peering
@@ -129,6 +129,7 @@ create_transit_gateway() {
         --profile $aws_profile \
         --query 'TransitGateway.TransitGatewayId' \
         --output text)
+    echo "$tgw_id"
 }
 
 # Function to check if a transit gateway exists in a region
@@ -139,6 +140,7 @@ check_transit_gateway_exists() {
         --profile $aws_profile \
         --query 'TransitGateways[0].TransitGatewayId' \
         --output text)
+    echo "$tgw_id"
 }
 
 # Function to create a transit gateway VPC attachment
