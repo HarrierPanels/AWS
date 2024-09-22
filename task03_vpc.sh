@@ -199,6 +199,44 @@ create_tgw_peering_attachment() {
         --profile $aws_profile
 }
 
+# Function to accept transit gateway peering attachment
+accept_tgw_peering() {
+    local tgw_peering_id=$1
+    local region=$2
+    aws ec2 accept-transit-gateway-peering-attachment \
+        --transit-gateway-attachment-id $tgw_peering_id \
+        --region $region \
+        --profile $aws_profile
+}
+
+# Function to check if a transit gateway peering attachment is available
+check_tgw_peering_available() {
+    local tgw_peering_id=$1
+    local region=$2
+    local max_retries=10
+    local retries=0
+    local state=""
+
+    while [ $retries -lt $max_retries ]; do
+        state=$(aws ec2 describe-transit-gateway-peering-attachments \
+            --transit-gateway-peering-attachment-ids $tgw_peering_id \
+            --region $region \
+            --profile $aws_profile \
+            --query 'TransitGatewayPeeringAttachments[0].State' \
+            --output text)
+        if [ "$state" == "available" ]; then
+            echo "Transit Gateway Peering Attachment $tgw_peering_id is available."
+            return 0
+        fi
+        echo "Waiting for Transit Gateway Peering Attachment $tgw_peering_id to become available..."
+        sleep 30
+        retries=$((retries + 1))
+    done
+
+    echo "Transit Gateway Peering Attachment $tgw_peering_id did not become available after $max_retries retries."
+    return 1
+}
+
 # Function to update transit gateway route table
 update_tgw_route_table() {
     local tgw_route_table_id=$1
@@ -312,6 +350,16 @@ main() {
     echo "Creating Transit Gateway peering between Region B and Region C..."
     tgw_peering_bc=$(create_tgw_peering_attachment $tgw_b $tgw_c $region_b $region_c)
     echo "Transit Gateway Peering Attachment BC ID: $tgw_peering_bc"
+
+    # Accept Transit Gateway peering attachments
+    echo "Accepting Transit Gateway peering attachments..."
+    accept_tgw_peering $tgw_peering_ac $region_c
+    accept_tgw_peering $tgw_peering_bc $region_c
+
+    # Wait for Transit Gateway peering attachments to become available
+    echo "Waiting for Transit Gateway peering attachments to become available..."
+    check_tgw_peering_available $tgw_peering_ac $region_c
+    check_tgw_peering_available $tgw_peering_bc $region_c
 
     # Update Transit Gateway route tables
     echo "Updating Transit Gateway route tables..."
