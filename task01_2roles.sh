@@ -49,7 +49,8 @@ create_iam_roles() {
 
     # Check if Read-Only Role exists
     if aws iam get-role --role-name $iam_role_readonly > /dev/null 2>&1; then
-        echo "Read-Only Role $iam_role_readonly already exists."
+        echo "Read-Only Role $iam_role_readonly already exists, attaching policy."
+        aws iam attach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
     else
         aws iam create-role --role-name $iam_role_readonly --assume-role-policy-document file://$trust_policy_file
         aws iam attach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
@@ -58,7 +59,8 @@ create_iam_roles() {
 
     # Check if Administrator Role exists
     if aws iam get-role --role-name $iam_role_administrator > /dev/null 2>&1; then
-        echo "Administrator Role $iam_role_administrator already exists."
+        echo "Administrator Role $iam_role_administrator already exists, attaching policy."
+        aws iam attach-role-policy --role-name $iam_role_administrator --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
     else
         aws iam create-role --role-name $iam_role_administrator --assume-role-policy-document file://$trust_policy_file
         aws iam attach-role-policy --role-name $iam_role_administrator --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
