@@ -1,7 +1,5 @@
 [![EPAM](https://img.shields.io/badge/Cloud%20Mentor:%20AWS%20Security%20Tasks-Using%20AWS%20Managed%20Policies%20for%20IAM%20Resources-orange)](./)
 <br>
----
-
 ## AWS IAM Role Management Script
 
 This Bash script automates the creation, validation, and deletion of AWS IAM roles using managed policies. It includes functions to configure AWS profiles, create and delete trust policy files, and manage IAM roles.
