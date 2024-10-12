@@ -5,8 +5,8 @@ source_file=".env"
 . "$source_file"
 
 # Resource Variables
-iam_role_readonly="iam_role_readonly"
-iam_role_administrator="iam_role_administrator"
+iam_role_readonly="cmtr-79e2b04a-iam-mp-iam_role-readonly"
+iam_role_administrator="cmtr-79e2b04a-iam-mp-iam_role-administrator"
 trust_policy_file="trust-policy.json"
 
 # Function to configure AWS profile
@@ -84,8 +84,8 @@ healthcheck_iam_roles() {
 
 # Function to delete IAM roles
 delete_iam_roles() {
-    echo "Sleeping for 300 seconds before deleting roles..."
-    sleep 300
+    echo "Sleeping for 500 seconds before deleting roles..."
+    sleep 500
 
     aws iam detach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
     aws iam delete-role --role-name $iam_role_readonly
