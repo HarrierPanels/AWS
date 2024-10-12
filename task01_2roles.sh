@@ -8,6 +8,7 @@ source_file=".env"
 iam_role_readonly="cmtr-79e2b04a-iam-mp-iam_role-readonly"
 iam_role_administrator="cmtr-79e2b04a-iam-mp-iam_role-administrator"
 trust_policy_file="trust-policy.json"
+task_name="Using AWS Managed Policies for IAM Resources"
 
 # Function to configure AWS profile
 aws_profile_config() {
@@ -46,15 +47,26 @@ delete_trust_policy_file() {
 create_iam_roles() {
     create_trust_policy_file
 
-    # Create Read-Only Role
-    aws iam create-role --role-name $iam_role_readonly --assume-role-policy-document file://$trust_policy_file
-    aws iam attach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
-    echo "Read-Only Role $iam_role_readonly created and policy attached."
+    # Check if Read-Only Role exists
+    if aws iam get-role --role-name $iam_role_readonly > /dev/null 2>&1; then
+        echo "Read-Only Role $iam_role_readonly already exists."
+    else
+        aws iam create-role --role-name $iam_role_readonly --assume-role-policy-document file://$trust_policy_file
+        aws iam attach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
+        echo "Read-Only Role $iam_role_readonly created and policy attached."
+    fi
 
-    # Create Administrator Role
-    aws iam create-role --role-name $iam_role_administrator --assume-role-policy-document file://$trust_policy_file
-    aws iam attach-role-policy --role-name $iam_role_administrator --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
-    echo "Administrator Role $iam_role_administrator created and policy attached."
+    # Check if Administrator Role exists
+    if aws iam get-role --role-name $iam_role_administrator > /dev/null 2>&1; then
+        echo "Administrator Role $iam_role_administrator already exists."
+    else
+        aws iam create-role --role-name $iam_role_administrator --assume-role-policy-document file://$trust_policy_file
+        aws iam attach-role-policy --role-name $iam_role_administrator --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+        echo "Administrator Role $iam_role_administrator created and policy attached."
+    fi
+
+    echo "Press the 'Validate' button with 'Check CLI usage' checked (located above the 'Validate' button)!"
+    sleep 10
 }
 
 # Function to perform health check on IAM roles
@@ -82,11 +94,35 @@ healthcheck_iam_roles() {
     return 1
 }
 
+# Function to validate and delete IAM roles
+validate_and_delete_iam_roles() {
+    local retries=30
+    local count=0
+
+    while [ $count -lt $retries ]; do
+        echo "Checking if roles exist, attempt $((count+1))..."
+
+        readonly_check=$(aws iam get-role --role-name $iam_role_readonly 2>/dev/null)
+        admin_check=$(aws iam get-role --role-name $iam_role_administrator 2>/dev/null)
+
+        if [[ -z "$readonly_check" && -z "$admin_check" ]]; then
+            echo "Both roles do not exist. Validation successful."
+            delete_trust_policy_file
+            echo "The '$task_name' task complete! Exiting ..."
+            return 0
+        fi
+
+        echo "Roles still exist. Retrying in 10 seconds..."
+        sleep 10
+        count=$((count+1))
+    done
+
+    echo "Out of retries. Deleting IAM roles."
+    delete_iam_roles
+}
+
 # Function to delete IAM roles
 delete_iam_roles() {
-    echo "Sleeping for 500 seconds before deleting roles..."
-    sleep 500
-
     aws iam detach-role-policy --role-name $iam_role_readonly --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
     aws iam delete-role --role-name $iam_role_readonly
     echo "Read-Only Role $iam_role_readonly deleted."
@@ -106,8 +142,8 @@ create_iam_roles
 
 # Perform health check
 if healthcheck_iam_roles; then
-    # Delete IAM roles after health check success
-    delete_iam_roles
+    # Validate and delete IAM roles after health check success
+    validate_and_delete_iam_roles
 else
     echo "Health check failed. Exiting script."
     exit 1
