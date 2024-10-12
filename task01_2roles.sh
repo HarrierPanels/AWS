@@ -67,7 +67,7 @@ create_iam_roles() {
         echo "Administrator Role $iam_role_administrator created and policy attached."
     fi
 
-    echo "Press the 'Validate' button with 'Check CLI usage' checked (located above the 'Validate' button)!"
+    echo "Press the 'Verify' button with 'Check CLI usage' checked (located right above the 'Verify' button)!"
     sleep 10
 }
 
