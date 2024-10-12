@@ -110,7 +110,7 @@ validate_and_delete_iam_roles() {
         if [[ -z "$readonly_check" && -z "$admin_check" ]]; then
             echo "Both roles do not exist. Validation successful."
             delete_trust_policy_file
-            echo "The '$task_name' task complete! Exiting ..."
+            echo "The '$task_name' task is complete! Exiting ..."
             return 0
         fi
 
